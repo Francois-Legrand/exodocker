@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  # Conteneur base de données
+  db: 
+    image: mongo
+    container_name: db 
+    volumes: 
+      # Ce volume permettra de préserver les données si la base de données doit évoluer. Ici, on 
+      # se base uniquement sur les données dans le dump, et ce volume n'est pas forcément nécessaire
+      - ./data:/data/db
+      # On monte le dump de la base de données dans un dossier du conteneur
+      - ./dump/test:/dump/
+      # On monte le script mongorestore.sh dans le dossier /docker-entrypoint-initdb.d, qui sera 
+      # lancé automatiquement au démarrage du conteneur.
+      # Ce dossier d'entrypoint est une convention Docker, qui est au moins respectée pour tous les
+      # conteneurs de base de données
+      - ./dump/mongorestore.sh:/docker-entrypoint-initdb.d/mongorestore.sh:ro
+  # Conteneur frontend
+  back:
+    container_name: back
+    build: C:\Users\yyper\Documents\vscode\cpi-java4-exo-docker\back
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db 
+  front:
+    container_name: front
+    build: C:\Users\yyper\Documents\vscode\cpi-java4-exo-docker\front
+    ports:
+      - "80:80"
+    depends_on:
+      - back
+  mongo-express:
+    image: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=username
+      - ME_CONFIG_BASICAUTH_PASSWORD=userpass
+      - ME_CONFIG_MONGODB_SERVER=db
+    
